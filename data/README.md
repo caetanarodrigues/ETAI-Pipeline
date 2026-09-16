@@ -1,5 +1,20 @@
 # Dataset -- COMPAS Recidivism (ProPublica)
 
+20260639 Caetana Rodrigues 
+
+--> logistic regression: 
+Train accuracy: 0.680
+Test accuracy:  0.678
+Gap (train - test): +0.002
+
+--> decision tree:
+Train accuracy: 0.829
+Test accuracy:  0.627
+Gap (train - test): +0.202
+
+--> Analysis: The best model is the logistic regression since the test accuracy is better than the decision tree. We can also see that the decision tree has a problem of overfitting, the train accuracy is much better than the test accuracy. 
+
+
 ## The problem
 
 In 2016, ProPublica investigated COMPAS, a risk-assessment algorithm
