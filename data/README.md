@@ -1,7 +1,16 @@
 # Dataset -- COMPAS Recidivism (ProPublica)
 
-20260639 Caetana Rodrigues 
+# 20260639 Caetana Rodrigues 
 
+## Pipeline progress
+
+Week 3: changed the preprocessing doc - added a clean data set function to clean our data
+
+## Preprocessing decisions
+
+## Best Model 
+
+Week 2 
 --> logistic regression: 
 Train accuracy: 0.680
 Test accuracy:  0.678
@@ -14,6 +23,20 @@ Gap (train - test): +0.202
 
 --> Analysis: The best model is the logistic regression since the test accuracy is better than the decision tree. We can also see that the decision tree has a problem of overfitting, the train accuracy is much better than the test accuracy. 
 
+Week 3
+--> logistic regression:
+Train accuracy: 0.678
+Test accuracy:  0.655
+Gap (train - test): +0.023
+    > The test accuracy dropped from 0.678 to 0.655. The gap between the training and test sets increased slightly from +0.002 to +0.023, indicating a minor loss in generalization.
+
+--> decision tree:
+Train accuracy: 0.799
+Test accuracy:  0.603
+Gap (train - test): +0.197
+    > The test accuracy also declined, dropping from 0.627 to 0.603. Train accuracy fell from 0.829 to 0.799, reducing the gap from +0.202 to +0.197. Although the severe overfitting issue persists.
+
+--> Analysis: The best model is the logistic regression, as its test accuracy (0.655) outperforms the decision tree (0.603). The decision tree continues to suffer from significant overfitting, demonstrated by a train accuracy (0.799) that remains much higher than its test accuracy (0.603).
 
 ## The problem
 
