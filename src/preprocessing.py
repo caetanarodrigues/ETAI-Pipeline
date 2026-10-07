@@ -1,14 +1,18 @@
 """
-Preprocessing -- deliberately minimal for week 2.
+Preprocessing -- raw data in, model-ready data out: category cleanup, domain-rule/
+placeholder -> NaN conversion, de-duplication, mechanism-matched imputation, a
+leak-safe/deployable encoder/scaler pipeline, and the split that sets the final test
+set aside. One file, one obvious place to look for "how does raw data become model-ready."
 
-This is intentionally the weakest part of the pipeline:
-    - missing values are simply dropped (no imputation strategy)
-    - categorical columns are one-hot encoded with no thought given to unseen categories or cardinality
-    - a single train/test split is used (no cross-validation)
-
-You will replace this with something better in the coming weeks.
-
-One thing that is NOT naive, on purpose: `sensitive_attr` (race) is kept out of the model's input features entirely. It's split alongside the data so it's still available afterwards -- not to train on, but to check whether the model treats different groups differently. See src/evaluate.py:fairness_report.
+Two things every function here respects, on purpose:
+  - leak-safe: `clean_dataset` and `split_features_target` learn nothing from the data
+    (no means, no category lists, no target), so they're safe to run on the whole
+    dataset. Everything that *is* learned from data -- imputation, encoding, scaling --
+    lives inside `build_preprocessor`'s ColumnTransformer, which sits inside the model's
+    sklearn Pipeline. That means it gets re-fit on the training part of every CV fold,
+    and never sees the validation fold or the locked test set.
+  - deployable from day one: nothing before the split needs the target column --
+    `y` comes back as `None` on label-free inference data, and nothing breaks.
 """
 import pandas as pd
 from sklearn.model_selection import StratifiedKFold, train_test_split
@@ -20,18 +24,6 @@ from sklearn.preprocessing import (
     OneHotEncoder, OrdinalEncoder, TargetEncoder, StandardScaler, MinMaxScaler, RobustScaler,
 )
 from category_encoders import CountEncoder
-
-
-def _canonicalize_categories(df: pd.DataFrame, columns_and_maps: dict, placeholder_tokens: set) -> pd.DataFrame:
-    out = df.copy()
-    for col, mapping in columns_and_maps.items():
-        if col not in out.columns:
-            continue
-        cleaned = out[col].astype(str).str.strip()
-        lowered = cleaned.str.lower()
-        out[col] = lowered.map(mapping).fillna(cleaned)
-        out.loc[out[col].astype(str).str.strip().isin(placeholder_tokens), col] = np.nan
-    return out
 
 def flag_invalid_values(df: pd.DataFrame, rules: dict) -> pd.DataFrame:
     """
@@ -54,6 +46,18 @@ def flag_invalid_values(df: pd.DataFrame, rules: dict) -> pd.DataFrame:
         df.loc[violations, column] = np.nan
     return pd.DataFrame(report_rows)
 
+def _canonicalize_categories(df: pd.DataFrame, columns_and_maps: dict, placeholder_tokens: set) -> pd.DataFrame:
+    out = df.copy()
+    for col, mapping in columns_and_maps.items():
+        if col not in out.columns:
+            continue
+        cleaned = out[col].astype(str).str.strip()
+        lowered = cleaned.str.lower()
+        out[col] = lowered.map(mapping).fillna(cleaned)
+        out.loc[out[col].astype(str).str.strip().isin(placeholder_tokens), col] = np.nan
+    return out
+
+
 def clean_dataset(df: pd.DataFrame, diagnostics_config: dict) -> pd.DataFrame:
     """
     Applies this week's diagnosis: category cleanup, domain-rule/placeholder -> NaN
@@ -72,10 +76,11 @@ def clean_dataset(df: pd.DataFrame, diagnostics_config: dict) -> pd.DataFrame:
 
     out = _canonicalize_categories(out, diagnostics_config.get("canonical_categories", {}), placeholder_tokens)
 
-    out = out.drop_duplicates()
+    #VER SE É PARA ESTAR AQUI
+    """out = out.drop_duplicates()
     id_column = diagnostics_config.get("id_column")
     if id_column and id_column in out.columns:
-        out = out.drop_duplicates(subset=id_column, keep="first")
+        out = out.drop_duplicates(subset=id_column, keep="first")"""
 
     columns_to_drop = [c for c in diagnostics_config.get("redundant_columns", []) if c in out.columns]
     out = out.drop(columns=columns_to_drop)
