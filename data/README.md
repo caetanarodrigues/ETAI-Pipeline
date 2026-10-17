@@ -6,6 +6,9 @@
 
 Week 3: changed the preprocessing doc - added a clean data set function to clean our data
 Week 4: changed the prepocessor function
+Week 4 update: added the crossvalidation 
+Week 5: added hyperparameter tuning 
+Week 6: added two new models - oblique random forest and adaboost
 
 ## Preprocessing decisions
 
@@ -39,7 +42,7 @@ Gap (train - test): +0.197
 
 --> Analysis: The best model is the logistic regression, as its test accuracy (0.655) outperforms the decision tree (0.603). The decision tree continues to suffer from significant overfitting, demonstrated by a train accuracy (0.799) that remains much higher than its test accuracy (0.603).
 
-### Week 4
+### Week 4 (Without CV)
 --> logistic regression: (max_iter = 2000 instead of 1000)
 Train accuracy: 0.676
 Test accuracy:  0.658
@@ -63,6 +66,20 @@ Test accuracy:  0.638
 Gap (train - test): +0.097
 
 --> Analysis: The best model is the logistic regression, as its test accuracy (0.658) is the highest among all models, outperforming the random forest (0.638), the decision tree (0.596), and the dummy baseline (0.550). It also shows excellent generalization, maintaining the smallest gap between train and test accuracy (+0.018).
+
+### Week 5 (With CV now)
+Did not run it before doing week 6
+
+### Week 6
+| Model | Default: CV mean ± std (gap) | Tuned: nested CV mean ± std (gap) | Tuning score (best trial) | Chosen hyperparameters |
+|---|---|---|---|---|
+| Logistic regression | 0.672 ± 0.013 (+0.003)  | — | — | — |
+| Decision tree | 0.611 ± 0.015 (+0.084) | 0.675 ± 0.020 (+0.009) | 0.680 | 'model__max_depth': 9, 'model__min_samples_leaf': 101, 'model__criterion': 'gini' |
+| Random forest | 0.652 ± 0.017 (+0.080) | 0.680 ± 0.015 (+0.009) | 0.682 | 'model__max_depth': 19, 'model__min_samples_leaf': 16, 'model__max_features': 'sqrt' |
+| Oblique random forest | 0.650 ± 0.009 (+0.113) | 0.682 ± 0.014 (+0.011)  | 0.683 | 'model__estimator__tree__max_depth': 4, 'model__estimator__tree__min_samples_leaf': 2, 'model__estimator__project__n_components': 10 |
+| AdaBoost | 0.676 ± 0.012 (+0.006) | 0.682 ± 0.016 (+0.005) | 0.684 | 'model__estimator__max_depth': 4, 'model__n_estimators': 220, 'model__learning_rate': 0.025081156860452335 |
+
+--> Analysis: Th best model is the AdaBoost, because it has the highest tuned score (nested CV 0.682 ± 0.016, tied with the oblique random forest) and a very small train/validation gap (+0.005). However, its lead is not bigger than the fold-to-fold std: it is only 0.007 above the decision tree and 0.002 above the random forest, while the std is 0.014-0.020, so the four tuned models are statistically tied. The chosen hyperparameters match how each model works. The single decision tree needs big leaves (101) to stay smooth, and the random forest can afford deeper trees (19) because averaging reduces variance. The oblique forest ended up shallow (depth 4) because each split uses a random projection of up to 10 features and is already more expressive, and AdaBoost picked a low learning rate (0.025) with 220 trees, so each small step corrects the previous errors without overfitting. I would report 0.682 ± 0.016, the nested CV score, rather than the 0.684 best-trial score, because the latter is the maximum over 30 trials and therefore optimistic.
 
 ## The problem
 

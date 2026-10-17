@@ -15,12 +15,11 @@ This orchestrates the full (deliberately simple) pipeline:
 
 import optuna
 import yaml
-from sklearn.pipeline import Pipeline
 from sklearn.model_selection import StratifiedKFold
 
 from src.data import load_data
-from src.preprocessing import build_preprocessor, clean_dataset, drop_duplicate_rows, split_features_target, split_dev_test
-from src.model import build_model
+from src.preprocessing import clean_dataset, drop_duplicate_rows, split_features_target, split_dev_test
+from src.model import build_pipeline
 from src.evaluate import cross_validate_pipeline, cv_report, oof_classification_report, fairness_report
 from src.tuning import tune_pipeline, nested_cross_validate, tuning_report
 from src.results import save_run
@@ -50,10 +49,7 @@ def main():
         random_state=config["test_set"]["random_state"],
     )
 
-    pipeline = Pipeline([
-        ("prep", build_preprocessor(config["preprocessing"])),
-        ("model", build_model(config["model"])),
-    ])
+    pipeline = build_pipeline(config["preprocessing"], config["model"])
 
     # a fixed random_state = the same folds on every run and for every model, so comparing
     # two models' fold scores is a like-for-like (paired) comparison
