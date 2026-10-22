@@ -9,6 +9,7 @@ Week 4: changed the prepocessor function
 Week 4 update: added the crossvalidation 
 Week 5: added hyperparameter tuning 
 Week 6: added two new models - oblique random forest and adaboost
+Week 7: added Gradient Boosting, HistGradientBoosting and Naive Bayes; 8 metrics from out-of-fold probabilities; ROC-AUC as the selection metric; scoreboard in `results/runs.csv` with the no-model floor and untuned score per run
 
 ## Preprocessing decisions
 
@@ -80,6 +81,23 @@ Did not run it before doing week 6
 | AdaBoost | 0.676 ± 0.012 (+0.006) | 0.682 ± 0.016 (+0.005) | 0.684 | 'model__estimator__max_depth': 4, 'model__n_estimators': 220, 'model__learning_rate': 0.025081156860452335 |
 
 --> Analysis: Th best model is the AdaBoost, because it has the highest tuned score (nested CV 0.682 ± 0.016, tied with the oblique random forest) and a very small train/validation gap (+0.005). However, its lead is not bigger than the fold-to-fold std: it is only 0.007 above the decision tree and 0.002 above the random forest, while the std is 0.014-0.020, so the four tuned models are statistically tied. The chosen hyperparameters match how each model works. The single decision tree needs big leaves (101) to stay smooth, and the random forest can afford deeper trees (19) because averaging reduces variance. The oblique forest ended up shallow (depth 4) because each split uses a random projection of up to 10 features and is already more expressive, and AdaBoost picked a low learning rate (0.025) with 220 trees, so each small step corrects the previous errors without overfitting. I would report 0.682 ± 0.016, the nested CV score, rather than the 0.684 best-trial score, because the latter is the maximum over 30 trials and therefore optimistic.
+
+### Week 7
+Selection metric: ROC-AUC · 5-fold stratified CV (same folds for every run) · tuned = nested CV, 30 Optuna trials
+
+| Model | Untuned | Tuned (nested) ± std | Floor |
+|---|---|---|---|
+| Gradient boosting | 0.727 | 0.728 ± 0.014 | 0.500 |
+| HistGradientBoosting | 0.717 | 0.728 ± 0.015 | 0.500 |
+| Oblique random forest | 0.686 | 0.727 ± 0.015 | 0.500 |
+| AdaBoost | 0.723 | 0.727 ± 0.014 | 0.500 |
+| Random forest | 0.683 | 0.726 ± 0.013 | 0.500 |
+| Logistic regression | 0.719 ± 0.014 | — | 0.500 |
+| Decision tree | 0.605 | 0.718 ± 0.015 | 0.500 |
+| Naive Bayes | 0.685 | 0.705 ± 0.012 | 0.500 |
+| Dummy | 0.500 | — | 0.500 |
+
+--> Selection metric: I chose ROC-AUC. COMPAS is a risk score used to rank defendants by how likely they are to reoffend, and ROC-AUC measures that ranking across all thresholds. Choosing the threshold, and so the trade-off between false positives and missed reoffenders, is a separate decision that shouldn't be made inside model selection. ROC-AUC is also less noisy than accuracy for comparing models, so the corrected t-test can actually separate them.
 
 ## The problem
 
