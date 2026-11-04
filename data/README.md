@@ -3,13 +3,15 @@
 # 20260639 Caetana Rodrigues 
 
 ## Pipeline progress
-
-Week 3: changed the preprocessing doc - added a clean data set function to clean our data
-Week 4: changed the prepocessor function
-Week 4 update: added the crossvalidation 
-Week 5: added hyperparameter tuning 
-Week 6: added two new models - oblique random forest and adaboost
-Week 7: added Gradient Boosting, HistGradientBoosting and Naive Bayes; 8 metrics from out-of-fold probabilities; ROC-AUC as the selection metric; scoreboard in `results/runs.csv` with the no-model floor and untuned score per run
+| Week | Changes |
+| --- | --- |
+| 3 | changed the preprocessing doc - added a clean data set function to clean our data |
+| 4 | changed the prepocessor function |
+| 4 update | added the crossvalidation |
+| 5 | added hyperparameter tuning |
+| 6 | added two new models - oblique random forest and adaboost |
+| 7 | added Gradient Boosting, HistGradientBoosting and Naive Bayes; 8 metrics from out-of-fold probabilities; ROC-AUC as the selection metric; scoreboard in `results/runs.csv` with the no-model floor and untuned score per run |
+| 8 | Added XGBoost (with gamma, reg_alpha, reg_lambda, min_child_weight in its search space); feature selection with VoteSelector as a Pipeline step, refit inside every fold, `min_votes` tuned with the model in nested CV; cached prep/select steps |
 
 ## Preprocessing decisions
 
@@ -98,6 +100,21 @@ Selection metric: ROC-AUC · 5-fold stratified CV (same folds for every run) · 
 | Dummy | 0.500 | — | 0.500 |
 
 --> Selection metric: I chose ROC-AUC. COMPAS is a risk score used to rank defendants by how likely they are to reoffend, and ROC-AUC measures that ranking across all thresholds. Choosing the threshold, and so the trade-off between false positives and missed reoffenders, is a separate decision that shouldn't be made inside model selection. ROC-AUC is also less noisy than accuracy for comparing models, so the corrected t-test can actually separate them.
+
+### Week 8
+### Feature selection (W8)
+XGBoost, tuned (nested CV, 30 trials), ROC-AUC, same 5 folds. With selection, `select__min_votes` (1–3) was tuned together with the model.
+
+| Run | Features (final model) | ROC-AUC (nested) |
+|---|---|---|
+| Without selection | 10 | 0.727 ± 0.016 |
+| With selection | 2 | 0.725 ± 0.013 |
+
+Corrected paired t-test (with − without): mean diff = −0.003, wins 1/5, p = 0.34
+
+Features kept by the final model (min_votes = 3): `age`, `priors_count`
+
+--> The model with selection scores 0.725, against 0.727 without it. The difference is smaller than the fold-to-fold std, and the corrected t-test finds no significant difference (p = 0.34), so the smaller model is as good. The final model keeps only `age` and `priors_count`, the two features every voter agreed on. That makes sense: they are the strongest predictors of reoffending in COMPAS, and the other features (juvenile counts, sex, charge degree, the missingness flags) add little once the model knows them. The chosen `min_votes` changed across the outer folds (2, 1, 2, 1, 2), and the top trials mix 1 and 3 at the same score, so how much to select barely matters here. I would keep selection on: a 2-feature model that ranks people as well as the 10-feature one is easier to explain and audit, which matters for a risk score used on real people. The cost is training time, since the selector fits three extra models per fold.
 
 ## The problem
 
