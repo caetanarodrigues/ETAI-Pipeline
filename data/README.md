@@ -11,7 +11,7 @@
 | 5 | added hyperparameter tuning |
 | 6 | added two new models - oblique random forest and adaboost |
 | 7 | added Gradient Boosting, HistGradientBoosting and Naive Bayes; 8 metrics from out-of-fold probabilities; ROC-AUC as the selection metric; scoreboard in `results/runs.csv` with the no-model floor and untuned score per run |
-| 8 | Added XGBoost (with gamma, reg_alpha, reg_lambda, min_child_weight in its search space); feature selection with VoteSelector as a Pipeline step, refit inside every fold, `min_votes` tuned with the model in nested CV; cached prep/select steps |
+| 8 | added XGBoost (with gamma, reg_alpha, reg_lambda, min_child_weight in its search space); feature selection with VoteSelector as a Pipeline step, refit inside every fold, `min_votes` tuned with the model in nested CV; cached prep/select steps |
 
 ## Preprocessing decisions
 
@@ -102,7 +102,6 @@ Selection metric: ROC-AUC · 5-fold stratified CV (same folds for every run) · 
 --> Selection metric: I chose ROC-AUC. COMPAS is a risk score used to rank defendants by how likely they are to reoffend, and ROC-AUC measures that ranking across all thresholds. Choosing the threshold, and so the trade-off between false positives and missed reoffenders, is a separate decision that shouldn't be made inside model selection. ROC-AUC is also less noisy than accuracy for comparing models, so the corrected t-test can actually separate them.
 
 ### Week 8
-### Feature selection (W8)
 XGBoost, tuned (nested CV, 30 trials), ROC-AUC, same 5 folds. With selection, `select__min_votes` (1–3) was tuned together with the model.
 
 | Run | Features (final model) | ROC-AUC (nested) |
