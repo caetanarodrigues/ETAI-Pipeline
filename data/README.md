@@ -117,6 +117,9 @@ Features kept by the final model (min_votes = 3): `age`, `priors_count`
 --> The model with selection scores 0.725, against 0.727 without it. The difference is smaller than the fold-to-fold std, and the corrected t-test finds no significant difference (p = 0.34), so the smaller model is as good. The final model keeps only `age` and `priors_count`, the two features every voter agreed on. That makes sense: they are the strongest predictors of reoffending in COMPAS, and the other features (juvenile counts, sex, charge degree, the missingness flags) add little once the model knows them. The chosen `min_votes` changed across the outer folds (2, 1, 2, 1, 2), and the top trials mix 1 and 3 at the same score, so how much to select barely matters here. I would keep selection on: a 2-feature model that ranks people as well as the 10-feature one is easier to explain and audit, which matters for a risk score used on real people. The cost is training time, since the selector fits three extra models per fold.
 
 ### Week 9
+- Fixing the pipeline 
+| What broke | Why it broke | How it was fixed |
+| ---------- | ------------ | ---------------- |
 
 
 ## The problem
