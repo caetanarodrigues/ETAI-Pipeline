@@ -12,6 +12,7 @@
 | 6 | added two new models - oblique random forest and adaboost |
 | 7 | added Gradient Boosting, HistGradientBoosting and Naive Bayes; 8 metrics from out-of-fold probabilities; ROC-AUC as the selection metric; scoreboard in `results/runs.csv` with the no-model floor and untuned score per run |
 | 8 | added XGBoost (with gamma, reg_alpha, reg_lambda, min_child_weight in its search space); feature selection with VoteSelector as a Pipeline step, refit inside every fold, `min_votes` tuned with the model in nested CV; cached prep/select steps |
+| 9 | used the pipeline in a different dataset, fixing errors coming from specific code for COMPAS |
 
 ## Preprocessing decisions
 
@@ -114,6 +115,9 @@ Corrected paired t-test (with − without): mean diff = −0.003, wins 1/5, p = 
 Features kept by the final model (min_votes = 3): `age`, `priors_count`
 
 --> The model with selection scores 0.725, against 0.727 without it. The difference is smaller than the fold-to-fold std, and the corrected t-test finds no significant difference (p = 0.34), so the smaller model is as good. The final model keeps only `age` and `priors_count`, the two features every voter agreed on. That makes sense: they are the strongest predictors of reoffending in COMPAS, and the other features (juvenile counts, sex, charge degree, the missingness flags) add little once the model knows them. The chosen `min_votes` changed across the outer folds (2, 1, 2, 1, 2), and the top trials mix 1 and 3 at the same score, so how much to select barely matters here. I would keep selection on: a 2-feature model that ranks people as well as the 10-feature one is easier to explain and audit, which matters for a risk score used on real people. The cost is training time, since the selector fits three extra models per fold.
+
+### Week 9
+
 
 ## The problem
 
